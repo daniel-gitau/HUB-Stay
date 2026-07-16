@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Listing Details - Hub Stay</title>
+  <link rel="stylesheet" href="/client/css/style.css?v=1721160000">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="navbar-brand"><div class="logo-icon">H</div> Hub Stay</a>
+      <div class="navbar-nav">
+        <a href="/">Home</a>
+        <a href="/client/pages/listings.html">Stays</a>
+        <a href="/client/pages/cars.html">Cars</a>
+      </div>
+      <div class="navbar-actions" id="nav-actions">
+        <a href="/client/pages/auth.html" class="btn btn-outline btn-sm">Log In</a>
+        <a href="/client/pages/auth.html?tab=register" class="btn btn-primary btn-sm">Sign Up</a>
+      </div>
+      <button class="nav-toggle">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="detail-page">
+    <div class="container">
+      <div id="listing-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+
+      <div class="reviews-section" id="reviews-section" style="display:none;">
+        <h2>Reviews</h2>
+        <div id="reviews-list"></div>
+
+        <div class="review-form" id="review-form" style="display:none;">
+          <h3>Write a Review</h3>
+          <div class="star-rating-input" id="star-input">
+            <span onclick="setRating(1)">★</span>
+            <span onclick="setRating(2)">★</span>
+            <span onclick="setRating(3)">★</span>
+            <span onclick="setRating(4)">★</span>
+            <span onclick="setRating(5)">★</span>
+          </div>
+          <div class="form-group">
+            <textarea id="review-comment" placeholder="Share your experience..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="booking-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>Book Now</h2>
+      <div id="modal-error" class="error-message" style="display:none;"></div>
+      <div id="modal-success" class="success-message" style="display:none;"></div>
+      <form onsubmit="handleBooking(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Check In</label>
+            <input type="date" id="book-checkin" required>
+          </div>
+          <div class="form-group">
+            <label>Check Out</label>
+            <input type="date" id="book-checkout" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Guests</label>
+          <input type="number" id="book-guests" value="1" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <label>Special Requests</label>
+          <textarea id="book-requests" placeholder="Any special requests?"></textarea>
+        </div>
+        <div style="margin-bottom: 20px; padding: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
+          <strong>Total: <span id="book-total" style="color: var(--primary);">$0</span></strong>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="book-btn">Confirm Booking</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/client/js/app.js?v=1721160000"></script>
+  <script>
+    let currentListing = null;
+    let currentType = getQueryParam('type') || 'listing';
+    let selectedRating = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (auth.isLoggedIn()) {
+        document.getElementById('review-form').style.display = 'block';
+        document.getElementById('nav-actions').innerHTML = `
+          <a href="/client/pages/profile.html" class="btn btn-outline btn-sm">Profile</a>
+          <button onclick="auth.logout()" class="btn btn-sm" style="background:var(--surface); border:1px solid var(--border); color:var(--text-secondary);">Logout</button>
+        `;
+      }
+      loadListing();
+    });
+
+    async function loadListing() {
+      const id = getQueryParam('id');
+      if (!id) { window.location.href = '/client/pages/listings.html'; return; }
+
+      try {
+        currentListing = await apiCall(`/listings/${id}`);
+        renderListing(currentListing);
+        loadReviews(id);
+        document.getElementById('reviews-section').style.display = 'block';
+        document.title = `${currentListing.name} - Hub Stay`;
+      } catch (err) {
+        document.getElementById('listing-content').innerHTML = '<div class="empty-state"><h3>Listing not found</h3><p>This listing may have been removed.</p></div>';
+      }
+    }
+
+    function renderListing(listing) {
+      const images = listing.images && listing.images.length > 0
+        ? listing.images
+        : ['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'];
+
+      const amenitiesList = {
+        wifi: '📶 WiFi', parking: '🅿️ Parking', pool: '🏊 Pool', gym: '🏋️ Gym',
+        restaurant: '🍽️ Restaurant', spa: '💆 Spa', laundry: '👕 Laundry',
+        ac: '❄️ AC', tv: '📺 TV', breakfast: '🍳 Breakfast', bar: '🍸 Bar',
+        room_service: '🛎️ Room Service', airport_shuttle: '🚌 Airport Shuttle', pet_friendly: '🐾 Pet Friendly'
+      };
+
+      document.getElementById('listing-content').innerHTML = `
+        <div class="detail-gallery">
+          <div class="main-image">
+            <img src="${images[0]}" alt="${listing.name}" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'">
+          </div>
+          <div class="side-images">
+            <img src="${images[1] || images[0]}" alt="" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400'">
+            <img src="${images[2] || images[0]}" alt="" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400'">
+          </div>
+        </div>
+
+        <div class="detail-content">
+          <div class="detail-info">
+            <h1>${listing.name}</h1>
+            <div class="detail-meta">
+              <span>📍 ${listing.location.address}, ${listing.location.city}, ${listing.location.country}</span>
+              <span class="card-badge" style="position:static;">${listing.type}</span>
+              <span>⭐ ${listing.rating.average > 0 ? `${listing.rating.average} (${listing.rating.count} reviews)` : 'No reviews'}</span>
+            </div>
+
+            ${listing.coordinates && listing.coordinates.lat ? `
+              <div class="map-container" id="map"></div>
+            ` : ''}
+
+            <div class="detail-description">${listing.description}</div>
+
+            ${listing.amenities && listing.amenities.length > 0 ? `
+              <h3 style="margin-bottom: 16px;">Amenities</h3>
+              <div class="amenities-grid">
+                ${listing.amenities.map(a => `<div class="amenity-item"><span class="icon">${amenitiesList[a]?.split(' ')[0] || '✨'}</span> ${amenitiesList[a]?.split(' ').slice(1).join(' ') || a}</div>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+
+          <div>
+            <div class="booking-card">
+              <div class="price-tag">${formatPrice(listing.price)} <span>/ night</span></div>
+              <div class="form-group">
+                <label>Check In</label>
+                <input type="date" id="quick-checkin" min="${new Date().toISOString().split('T')[0]}">
+              </div>
+              <div class="form-group">
+                <label>Check Out</label>
+                <input type="date" id="quick-checkout" min="${new Date().toISOString().split('T')[0]}">
+              </div>
+              <button class="btn btn-primary btn-block btn-lg" onclick="openBooking()">Book Now</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (listing.coordinates && listing.coordinates.lat) {
+        initMap(listing.coordinates.lat, listing.coordinates.lng);
+      }
+    }
+
+    function initMap(lat, lng) {
+      const mapDiv = document.getElementById('map');
+      if (!mapDiv) return;
+      mapDiv.innerHTML = `<iframe width="100%" height="300" frameborder="0" style="border:0; border-radius: var(--radius);" src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}" allowfullscreen></iframe>`;
+    }
+
+    async function loadReviews(id) {
+      try {
+        const data = await apiCall(`/reviews/listing/${id}`);
+        const container = document.getElementById('reviews-list');
+
+        if (data.reviews.length === 0) {
+          container.innerHTML = '<p style="color:var(--gray-500);">No reviews yet. Be the first to review!</p>';
+        } else {
+          container.innerHTML = data.reviews.map(r => `
+            <div class="review-card">
+              <div class="review-header">
+                <img src="${r.user?.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'}" alt="${r.user?.name}">
+                <div>
+                  <h4>${r.user?.name || 'Anonymous'}</h4>
+                  <span class="date">${formatDate(r.createdAt)}</span>
+                </div>
+              </div>
+              <div class="stars">${renderStars(r.rating)}</div>
+              <p>${r.comment}</p>
+            </div>
+          `).join('');
+        }
+      } catch (err) {}
+    }
+
+    function setRating(r) {
+      selectedRating = r;
+      document.querySelectorAll('#star-input span').forEach((s, i) => {
+        s.classList.toggle('active', i < r);
+      });
+    }
+
+    async function submitReview() {
+      if (!auth.isLoggedIn()) { window.location.href = '/client/pages/auth.html'; return; }
+      if (!selectedRating) { showToast('Please select a rating', 'error'); return; }
+
+      const comment = document.getElementById('review-comment').value.trim();
+      if (!comment) { showToast('Please write a comment', 'error'); return; }
+
+      try {
+        await apiCall(`/reviews/listing/${getQueryParam('id')}`, {
+          method: 'POST',
+          body: JSON.stringify({ rating: selectedRating, comment })
+        });
+        showToast('Review submitted!');
+        document.getElementById('review-comment').value = '';
+        setRating(0);
+        loadReviews(getQueryParam('id'));
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function openBooking() {
+      if (!auth.isLoggedIn()) { window.location.href = '/client/pages/auth.html'; return; }
+      const checkin = document.getElementById('quick-checkin').value;
+      const checkout = document.getElementById('quick-checkout').value;
+      if (checkin) document.getElementById('book-checkin').value = checkin;
+      if (checkout) document.getElementById('book-checkout').value = checkout;
+      updateTotal();
+      document.getElementById('booking-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('booking-modal').classList.remove('active');
+    }
+
+    function updateTotal() {
+      const checkin = new Date(document.getElementById('book-checkin').value);
+      const checkout = new Date(document.getElementById('book-checkout').value);
+      const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+      if (nights > 0 && currentListing) {
+        document.getElementById('book-total').textContent = formatPrice(nights * currentListing.price);
+      }
+    }
+
+    document.getElementById('book-checkin')?.addEventListener('change', updateTotal);
+    document.getElementById('book-checkout')?.addEventListener('change', updateTotal);
+
+    async function handleBooking(e) {
+      e.preventDefault();
+      const btn = document.getElementById('book-btn');
+      const errorEl = document.getElementById('modal-error');
+      const successEl = document.getElementById('modal-success');
+      btn.disabled = true;
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      const checkin = new Date(document.getElementById('book-checkin').value);
+      const checkout = new Date(document.getElementById('book-checkout').value);
+      const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+
+      if (nights <= 0) {
+        errorEl.textContent = 'Check-out must be after check-in';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        const booking = await apiCall('/bookings', {
+          method: 'POST',
+          body: JSON.stringify({
+            listingType: 'listing',
+            listingId: currentListing._id,
+            checkIn: document.getElementById('book-checkin').value,
+            checkOut: document.getElementById('book-checkout').value,
+            guests: document.getElementById('book-guests').value,
+            totalPrice: nights * currentListing.price,
+            specialRequests: document.getElementById('book-requests').value
+          })
+        });
+
+        successEl.textContent = 'Booking confirmed! Redirecting to your profile...';
+        successEl.style.display = 'block';
+        setTimeout(() => window.location.href = '/client/pages/profile.html', 2000);
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

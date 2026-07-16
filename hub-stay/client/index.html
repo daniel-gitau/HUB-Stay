@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Hub Stay - Hotels, Lodges, Hostels, Food & Car Hire</title>
+  <link rel="stylesheet" href="/client/css/style.css?v=1721160000">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="navbar-brand">
+        <div class="logo-icon">H</div>
+        Hub Stay
+      </a>
+      <div class="navbar-nav">
+        <a href="/" class="active">Home</a>
+        <a href="/client/pages/listings.html">Stays</a>
+        <a href="/client/pages/listings.html?type=hotel">Hotels</a>
+        <a href="/client/pages/listings.html?type=lodge">Lodges</a>
+        <a href="/client/pages/listings.html?type=hostel">Hostels</a>
+        <a href="/client/pages/listings.html?category=food">Food</a>
+        <a href="/client/pages/cars.html">Cars</a>
+      </div>
+      <div class="navbar-actions">
+        <a href="/client/pages/auth.html" class="btn btn-outline btn-sm">Log In</a>
+        <a href="/client/pages/auth.html?tab=register" class="btn btn-primary btn-sm">Sign Up</a>
+      </div>
+      <button class="nav-toggle">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="open-to-work-badge">
+    <div class="status-dot"></div>
+    <span>Open to <span class="highlight" style="color: var(--primary);">Work</span></span>
+  </div>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Find Your Perfect <span>Stay</span> & <span>Ride</span></h1>
+        <p>Discover hotels, lodges, hostels, food spots, and car hire services worldwide. Your one-stop travel marketplace.</p>
+
+        <div class="search-box">
+          <div class="search-tabs">
+            <button class="search-tab active" data-type="stays" onclick="switchSearchTab(this)">Stays</button>
+            <button class="search-tab" data-type="food" onclick="switchSearchTab(this)">Food</button>
+            <button class="search-tab" data-type="cars" onclick="switchSearchTab(this)">Cars</button>
+          </div>
+
+          <div id="search-stays" class="search-panel">
+            <div class="search-form">
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="search-location" placeholder="City or country">
+              </div>
+              <div class="form-group">
+                <label>Type</label>
+                <select id="search-type">
+                  <option value="">All Types</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="lodge">Lodge</option>
+                  <option value="hostel">Hostel</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Check In</label>
+                <input type="date" id="search-checkin">
+              </div>
+              <div class="form-group">
+                <label>Check Out</label>
+                <input type="date" id="search-checkout">
+              </div>
+              <button class="btn btn-primary btn-lg" onclick="searchStays()">Search</button>
+            </div>
+          </div>
+
+          <div id="search-food" class="search-panel" style="display:none;">
+            <div class="search-form">
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="food-location" placeholder="City or country">
+              </div>
+              <div class="form-group">
+                <label>Cuisine</label>
+                <select id="food-cuisine">
+                  <option value="">All Cuisines</option>
+                  <option value="local">Local</option>
+                  <option value="international">International</option>
+                  <option value="fast_food">Fast Food</option>
+                  <option value="fine_dining">Fine Dining</option>
+                  <option value="cafe">Cafe</option>
+                  <option value="seafood">Seafood</option>
+                  <option value="vegetarian">Vegetarian</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-lg" onclick="searchFood()">Search</button>
+            </div>
+          </div>
+
+          <div id="search-cars" class="search-panel" style="display:none;">
+            <div class="search-form">
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="car-location" placeholder="City or country">
+              </div>
+              <div class="form-group">
+                <label>Car Type</label>
+                <select id="car-type">
+                  <option value="">All Types</option>
+                  <option value="sedan">Sedan</option>
+                  <option value="suv">SUV</option>
+                  <option value="hatchback">Hatchback</option>
+                  <option value="van">Van</option>
+                  <option value="luxury">Luxury</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-lg" onclick="searchCars()">Search</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <h3>500+</h3>
+            <p>Properties</p>
+          </div>
+          <div class="hero-stat">
+            <h3>50+</h3>
+            <p>Cities</p>
+          </div>
+          <div class="hero-stat">
+            <h3>10K+</h3>
+            <p>Happy Guests</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Browse by Category</h2>
+        <p>Find exactly what you need for your next trip</p>
+      </div>
+      <div class="categories-grid">
+        <a href="/client/pages/listings.html?type=hotel" class="category-card">
+          <div class="icon">🏨</div>
+          <h3>Hotels</h3>
+          <p>Luxury & budget</p>
+        </a>
+        <a href="/client/pages/listings.html?type=lodge" class="category-card">
+          <div class="icon">🏡</div>
+          <h3>Lodges</h3>
+          <p>Cozy retreats</p>
+        </a>
+        <a href="/client/pages/listings.html?type=hostel" class="category-card">
+          <div class="icon">🛏️</div>
+          <h3>Hostels</h3>
+          <p>Budget friendly</p>
+        </a>
+        <a href="/client/pages/listings.html?category=food" class="category-card">
+          <div class="icon">🍽️</div>
+          <h3>Food Points</h3>
+          <p>Local & international</p>
+        </a>
+        <a href="/client/pages/cars.html" class="category-card">
+          <div class="icon">🚗</div>
+          <h3>Car Hire</h3>
+          <p>Ride in style</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Featured Stays</h2>
+        <p>Top-rated properties handpicked for you</p>
+      </div>
+      <div class="cards-grid" id="featured-listings">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="/client/pages/listings.html" class="btn btn-outline btn-lg">View All Stays</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Why Choose Hub Stay?</h2>
+        <p>Everything you need for a perfect trip</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon">🔍</div>
+          <h3>Easy Search</h3>
+          <p>Find the perfect stay or car with powerful filters and instant results.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">💰</div>
+          <h3>Best Prices</h3>
+          <p>Competitive prices with no hidden fees. What you see is what you pay.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">⭐</div>
+          <h3>Verified Reviews</h3>
+          <p>Read genuine reviews from real travelers to make informed decisions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🔒</div>
+          <h3>Secure Booking</h3>
+          <p>Your payments and data are protected with industry-standard encryption.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>What Travelers Say</h2>
+        <p>Real experiences from real people</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"Hub Stay made our honeymoon unforgettable. Found an amazing lodge in Bali at a great price. The booking process was seamless!"</p>
+          <div class="testimonial-author">
+            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sarah">
+            <div>
+              <h4>Sarah Johnson</h4>
+              <span>Traveled to Bali</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"Used Hub Stay for car hire in Cape Town. The car was exactly as described and the price was unbeatable. Highly recommend!"</p>
+          <div class="testimonial-author">
+            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="James">
+            <div>
+              <h4>James Mwangi</h4>
+              <span>Traveled to Cape Town</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"As a solo traveler, I love the hostel options on Hub Stay. Affordable, clean, and I met amazing people. Five stars!"</p>
+          <div class="testimonial-author">
+            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Maria">
+            <div>
+              <h4>Maria Garcia</h4>
+              <span>Traveled to Barcelona</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>Hub Stay</h3>
+          <p>Your ultimate marketplace for hotels, lodges, hostels, food spots, and car hire services worldwide.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Accommodation</h4>
+          <ul>
+            <li><a href="/client/pages/listings.html?type=hotel">Hotels</a></li>
+            <li><a href="/client/pages/listings.html?type=lodge">Lodges</a></li>
+            <li><a href="/client/pages/listings.html?type=hostel">Hostels</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/client/pages/listings.html?category=food">Food Points</a></li>
+            <li><a href="/client/pages/cars.html">Car Hire</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Hub Stay. All rights reserved.</span>
+        <div class="footer-social">
+          <a href="#">📘</a>
+          <a href="#">🐦</a>
+          <a href="#">📸</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/client/js/app.js?v=1721160000"></script>
+  <script>
+    function switchSearchTab(btn) {
+      document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const type = btn.dataset.type;
+      document.querySelectorAll('.search-panel').forEach(p => p.style.display = 'none');
+      document.getElementById('search-' + type).style.display = 'block';
+    }
+
+    function searchStays() {
+      const location = document.getElementById('search-location').value;
+      const type = document.getElementById('search-type').value;
+      let url = '/client/pages/listings.html?';
+      if (location) url += `city=${encodeURIComponent(location)}&`;
+      if (type) url += `type=${type}&`;
+      window.location.href = url;
+    }
+
+    function searchFood() {
+      const location = document.getElementById('food-location').value;
+      const cuisine = document.getElementById('food-cuisine').value;
+      let url = '/client/pages/listings.html?category=food&';
+      if (location) url += `city=${encodeURIComponent(location)}&`;
+      if (cuisine) url += `cuisine=${cuisine}&`;
+      window.location.href = url;
+    }
+
+    function searchCars() {
+      const location = document.getElementById('car-location').value;
+      const type = document.getElementById('car-type').value;
+      let url = '/client/pages/cars.html?';
+      if (location) url += `city=${encodeURIComponent(location)}&`;
+      if (type) url += `type=${type}&`;
+      window.location.href = url;
+    }
+
+    async function loadFeatured() {
+      try {
+        const data = await apiCall('/listings?featured=true&limit=6');
+        const container = document.getElementById('featured-listings');
+        if (data.listings && data.listings.length > 0) {
+          container.innerHTML = data.listings.map(l => createCard(l, 'listing')).join('');
+        } else {
+          container.innerHTML = '<div class="empty-state"><div class="icon">🏨</div><h3>No featured listings yet</h3><p>Check back soon for curated stays!</p></div>';
+        }
+      } catch (err) {
+        document.getElementById('featured-listings').innerHTML = '<div class="empty-state"><div class="icon">🏨</div><h3>No featured listings yet</h3><p>Check back soon for curated stays!</p></div>';
+      }
+    }
+
+    loadFeatured();
+  </script>
+</body>
+</html>

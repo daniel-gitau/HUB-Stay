@@ -1,0 +1,25 @@
+{
+  "name": "hub-stay",
+  "version": "1.0.0",
+  "description": "Hub Stay - Your ultimate marketplace for hotels, lodges, hostels, food & car hire",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js"
+  },
+  "keywords": ["hotels", "lodges", "hostels", "car-rental", "food", "travel"],
+  "author": "Hub Stay",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.4",
+    "multer": "^2.2.0",
+    "stripe": "^22.3.1"
+  }
+}

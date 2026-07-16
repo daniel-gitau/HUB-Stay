@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Car Hire - Hub Stay</title>
+  <link rel="stylesheet" href="/client/css/style.css?v=1721160000">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="navbar-brand"><div class="logo-icon">H</div> Hub Stay</a>
+      <div class="navbar-nav">
+        <a href="/">Home</a>
+        <a href="/client/pages/listings.html">Stays</a>
+        <a href="/client/pages/cars.html" class="active">Cars</a>
+      </div>
+      <div class="navbar-actions" id="nav-actions">
+        <a href="/client/pages/auth.html" class="btn btn-outline btn-sm">Log In</a>
+        <a href="/client/pages/auth.html?tab=register" class="btn btn-primary btn-sm">Sign Up</a>
+      </div>
+      <button class="nav-toggle">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <h1>Car Hire</h1>
+      <p>Ride in style at affordable prices</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="browse-layout">
+      <aside class="sidebar">
+        <h3>Filters</h3>
+
+        <div class="filter-group">
+          <h4>Car Type</h4>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="sedan" class="filter-car-type" onchange="applyFilters()"> Sedan</label>
+            <label><input type="checkbox" value="suv" class="filter-car-type" onchange="applyFilters()"> SUV</label>
+            <label><input type="checkbox" value="hatchback" class="filter-car-type" onchange="applyFilters()"> Hatchback</label>
+            <label><input type="checkbox" value="van" class="filter-car-type" onchange="applyFilters()"> Van</label>
+            <label><input type="checkbox" value="luxury" class="filter-car-type" onchange="applyFilters()"> Luxury</label>
+            <label><input type="checkbox" value="truck" class="filter-car-type" onchange="applyFilters()"> Truck</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Transmission</h4>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="automatic" class="filter-trans" onchange="applyFilters()"> Automatic</label>
+            <label><input type="checkbox" value="manual" class="filter-trans" onchange="applyFilters()"> Manual</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Min Seats</h4>
+          <select id="filter-seats" onchange="applyFilters()" style="width:100%; padding:8px; border:1px solid var(--border-light); border-radius:6px; background:var(--bg-2); color:var(--text-primary); font-family:var(--font); color-scheme:dark; -webkit-appearance:none; appearance:none; cursor:pointer;">
+            <option value="">Any</option>
+            <option value="2">2+</option>
+            <option value="4">4+</option>
+            <option value="5">5+</option>
+            <option value="7">7+</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <h4>Price Range (per day)</h4>
+          <div class="price-range">
+            <input type="number" id="min-car-price" placeholder="Min" onchange="applyFilters()">
+            <span>-</span>
+            <input type="number" id="max-car-price" placeholder="Max" onchange="applyFilters()">
+          </div>
+        </div>
+
+        <button class="btn btn-outline btn-block" onclick="resetFilters()">Clear Filters</button>
+      </aside>
+
+      <main>
+        <div class="results-header">
+          <h2 id="results-count">Loading...</h2>
+          <select id="sort-select" onchange="applyFilters()">
+            <option value="">Newest First</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+            <option value="year">Newest Cars</option>
+          </select>
+        </div>
+
+        <div class="cards-grid" id="cars-grid">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+      </main>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <span>&copy; 2026 Hub Stay. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/client/js/app.js?v=1721160000"></script>
+  <script>
+    let currentPage = 1;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const city = getQueryParam('city');
+      const type = getQueryParam('type');
+      if (city) document.getElementById('page-subtitle').textContent = `Showing cars in ${city}`;
+      if (type) {
+        document.querySelectorAll('.filter-car-type').forEach(cb => {
+          if (cb.value === type) cb.checked = true;
+        });
+      }
+      applyFilters();
+    });
+
+    async function applyFilters(page = 1) {
+      currentPage = page;
+      const grid = document.getElementById('cars-grid');
+      grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      try {
+        const types = [...document.querySelectorAll('.filter-car-type:checked')].map(cb => cb.value);
+        const trans = [...document.querySelectorAll('.filter-trans:checked')].map(cb => cb.value);
+        const seats = document.getElementById('filter-seats').value;
+        const minPrice = document.getElementById('min-car-price').value;
+        const maxPrice = document.getElementById('max-car-price').value;
+        const sort = document.getElementById('sort-select').value;
+        const city = getQueryParam('city');
+        const urlType = getQueryParam('type');
+
+        let params = new URLSearchParams();
+        if (urlType) params.set('type', urlType);
+        else if (types.length === 1) params.set('type', types[0]);
+        if (city) params.set('city', city);
+        if (seats) params.set('minSeats', seats);
+        if (minPrice) params.set('minPrice', minPrice);
+        if (maxPrice) params.set('maxPrice', maxPrice);
+        if (sort) params.set('sort', sort);
+        params.set('page', page);
+        params.set('limit', 12);
+
+        const data = await apiCall(`/cars?${params}`);
+        document.getElementById('results-count').textContent = `${data.pagination.total} cars found`;
+
+        if (data.cars.length === 0) {
+          grid.innerHTML = '<div class="empty-state"><div class="icon">🚗</div><h3>No cars found</h3><p>Try adjusting your filters</p></div>';
+        } else {
+          grid.innerHTML = data.cars.map(c => createCard(c, 'car')).join('');
+        }
+
+        renderPagination(data.pagination.pages);
+      } catch (err) {
+        grid.innerHTML = '<div class="empty-state"><div class="icon">🚗</div><h3>No cars available yet</h3><p>Check back soon!</p></div>';
+      }
+    }
+
+    function renderPagination(pages) {
+      const container = document.getElementById('pagination');
+      if (pages <= 1) { container.innerHTML = ''; return; }
+      let html = '';
+      for (let i = 1; i <= pages; i++) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="applyFilters(${i})">${i}</button>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function resetFilters() {
+      document.querySelectorAll('.filter-car-type, .filter-trans').forEach(cb => cb.checked = false);
+      document.getElementById('filter-seats').value = '';
+      document.getElementById('min-car-price').value = '';
+      document.getElementById('max-car-price').value = '';
+      document.getElementById('sort-select').value = '';
+      applyFilters();
+    }
+  </script>
+</body>
+</html>

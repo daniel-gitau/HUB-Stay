@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Browse Stays - Hub Stay</title>
+  <link rel="stylesheet" href="/client/css/style.css?v=1721160000">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="navbar-brand"><div class="logo-icon">H</div> Hub Stay</a>
+      <div class="navbar-nav">
+        <a href="/">Home</a>
+        <a href="/client/pages/listings.html" class="active">Stays</a>
+        <a href="/client/pages/cars.html">Cars</a>
+      </div>
+      <div class="navbar-actions">
+        <a href="/client/pages/auth.html" class="btn btn-outline btn-sm">Log In</a>
+        <a href="/client/pages/auth.html?tab=register" class="btn btn-primary btn-sm">Sign Up</a>
+      </div>
+      <button class="nav-toggle">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <h1 id="page-title">Browse Stays</h1>
+      <p id="page-subtitle">Find your perfect accommodation</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="browse-layout">
+      <aside class="sidebar">
+        <h3>Filters</h3>
+
+        <div class="filter-group">
+          <h4>Type</h4>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="hotel" class="filter-type" onchange="applyFilters()"> Hotel</label>
+            <label><input type="checkbox" value="lodge" class="filter-type" onchange="applyFilters()"> Lodge</label>
+            <label><input type="checkbox" value="hostel" class="filter-type" onchange="applyFilters()"> Hostel</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Price Range (per night)</h4>
+          <div class="price-range">
+            <input type="number" id="min-price" placeholder="Min" onchange="applyFilters()">
+            <span>-</span>
+            <input type="number" id="max-price" placeholder="Max" onchange="applyFilters()">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h4>Rating</h4>
+          <div class="radio-group">
+            <label><input type="radio" name="rating" value="" onchange="applyFilters()" checked> All</label>
+            <label><input type="radio" name="rating" value="4" onchange="applyFilters()"> 4+ Stars</label>
+            <label><input type="radio" name="rating" value="3" onchange="applyFilters()"> 3+ Stars</label>
+          </div>
+        </div>
+
+        <button class="btn btn-outline btn-block" onclick="resetFilters()">Clear Filters</button>
+      </aside>
+
+      <main>
+        <div class="results-header">
+          <h2 id="results-count">Loading...</h2>
+          <select id="sort-select" onchange="applyFilters()">
+            <option value="">Newest First</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+          </select>
+        </div>
+
+        <div class="cards-grid" id="listings-grid">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+      </main>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <span>&copy; 2026 Hub Stay. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/client/js/app.js?v=1721160000"></script>
+  <script>
+    let currentPage = 1;
+    const isFoodCategory = getQueryParam('category') === 'food';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlType = getQueryParam('type');
+      const city = getQueryParam('city');
+
+      if (isFoodCategory) {
+        document.getElementById('page-title').textContent = 'Food Points';
+        document.getElementById('page-subtitle').textContent = 'Discover amazing restaurants and food spots';
+        document.querySelector('.sidebar').style.display = 'none';
+      } else {
+        if (urlType) {
+          document.querySelectorAll('.filter-type').forEach(cb => {
+            if (cb.value === urlType) cb.checked = true;
+          });
+          document.getElementById('page-title').textContent = `Browse ${urlType.charAt(0).toUpperCase() + urlType.slice(1)}s`;
+        }
+        if (city) document.getElementById('page-subtitle').textContent = `Showing results in ${city}`;
+      }
+
+      applyFilters();
+    });
+
+    async function applyFilters(page = 1) {
+      currentPage = page;
+      const grid = document.getElementById('listings-grid');
+      grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      try {
+        let url, data;
+
+        if (isFoodCategory) {
+          const cuisine = getQueryParam('cuisine');
+          const city = getQueryParam('city');
+          let params = new URLSearchParams();
+          if (city) params.set('city', city);
+          if (cuisine) params.set('cuisine', cuisine);
+          params.set('page', page);
+          params.set('limit', 12);
+
+          data = await apiCall(`/food?${params}`);
+          document.getElementById('results-count').textContent = `${data.pagination.total} food points found`;
+
+          if (data.foodPoints.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><div class="icon">🍽️</div><h3>No food points found</h3><p>Try adjusting your filters</p></div>';
+          } else {
+            grid.innerHTML = data.foodPoints.map(f => createCard(f, 'food')).join('');
+          }
+        } else {
+          const types = [...document.querySelectorAll('.filter-type:checked')].map(cb => cb.value);
+          const minPrice = document.getElementById('min-price').value;
+          const maxPrice = document.getElementById('max-price').value;
+          const rating = document.querySelector('input[name="rating"]:checked')?.value;
+          const sort = document.getElementById('sort-select').value;
+          const city = getQueryParam('city');
+          const urlType = getQueryParam('type');
+
+          let params = new URLSearchParams();
+          if (urlType) params.set('type', urlType);
+          else if (types.length === 1) params.set('type', types[0]);
+          if (city) params.set('city', city);
+          if (minPrice) params.set('minPrice', minPrice);
+          if (maxPrice) params.set('maxPrice', maxPrice);
+          if (sort) params.set('sort', sort);
+          params.set('page', page);
+          params.set('limit', 12);
+
+          data = await apiCall(`/listings?${params}`);
+          document.getElementById('results-count').textContent = `${data.pagination.total} stays found`;
+
+          if (data.listings.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><div class="icon">🏨</div><h3>No stays found</h3><p>Try adjusting your filters</p></div>';
+          } else {
+            grid.innerHTML = data.listings.map(l => createCard(l, 'listing')).join('');
+          }
+        }
+
+        renderPagination(data.pagination.pages);
+      } catch (err) {
+        grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><h3>Something went wrong</h3><p>Please try again later</p></div>';
+      }
+    }
+
+    function renderPagination(pages) {
+      const container = document.getElementById('pagination');
+      if (pages <= 1) { container.innerHTML = ''; return; }
+
+      let html = '';
+      for (let i = 1; i <= pages; i++) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="applyFilters(${i})">${i}</button>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function resetFilters() {
+      document.querySelectorAll('.filter-type').forEach(cb => cb.checked = false);
+      document.getElementById('min-price').value = '';
+      document.getElementById('max-price').value = '';
+      document.querySelector('input[name="rating"][value=""]').checked = true;
+      document.getElementById('sort-select').value = '';
+      applyFilters();
+    }
+  </script>
+</body>
+</html>
